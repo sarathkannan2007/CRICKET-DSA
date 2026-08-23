@@ -45,6 +45,20 @@ bool checkID(int id)
     }
     return false;
 }
+Team *getTeamByID(int id)
+{
+    Team *temp = head;
+    while(temp != nullptr)
+    {
+        if(temp->TeamID == id)
+        {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    return nullptr;
+}
+
 void addTeam()
 {
     Team *newTeam = createTeam();
