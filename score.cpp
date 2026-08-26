@@ -14,12 +14,6 @@ struct node
     struct node *next;
 };
 
-struct node *alloc()
-{
-    struct node *nnode = (struct node *)malloc(sizeof(struct node));
-    return nnode;
-}
-
 struct node *hteam1 = NULL;
 struct node *tteam1 = NULL;
 
@@ -28,7 +22,13 @@ struct node *tteam2 = NULL;
 
 struct node *temp = NULL;
 
-void addTeam1(string pnn, int pn, string tm)
+struct node *alloc()
+{
+    struct node *nnode = (struct node *)malloc(sizeof(struct node));
+    return nnode;
+}
+
+void addTeam1(string pnn,int pn,string tm)
 {
     struct node *newnode = alloc();
 
@@ -51,7 +51,7 @@ void addTeam1(string pnn, int pn, string tm)
     }
 }
 
-void addTeam2(string pnn, int pn, string tm)
+void addTeam2(string pnn,int pn,string tm)
 {
     struct node *newnode = alloc();
 
@@ -106,13 +106,31 @@ void updateWicket(struct node *head,int pn)
     }
 }
 
-node* getPlayer(struct node *head,int pn)
+struct node *getPlayer(struct node *head,int position)
+{
+    temp = head;
+
+    int count = 0;
+
+    while(temp != NULL)
+    {
+        if(count == position)
+            return temp;
+
+        count++;
+        temp = temp->next;
+    }
+
+    return NULL;
+}
+
+struct node *getPlayerByID(struct node *head,int id)
 {
     temp = head;
 
     while(temp != NULL)
     {
-        if(temp->playernum == pn)
+        if(temp->playernum == id)
             return temp;
 
         temp = temp->next;
@@ -123,16 +141,19 @@ node* getPlayer(struct node *head,int pn)
 
 void displayTeam1()
 {
-    temp = hteam1;
-
     cout << "\n========== TEAM 1 ==========\n";
+
+    temp = hteam1;
 
     while(temp != NULL)
     {
-        cout << temp->playernum << "  "
+        cout << temp->playernum
+             << "  "
              << temp->playername
-             << "  Runs: " << temp->score
-             << "  Wickets: " << temp->wicket
+             << "  Score: "
+             << temp->score
+             << "  Wickets: "
+             << temp->wicket
              << endl;
 
         temp = temp->next;
@@ -141,16 +162,19 @@ void displayTeam1()
 
 void displayTeam2()
 {
-    temp = hteam2;
-
     cout << "\n========== TEAM 2 ==========\n";
+
+    temp = hteam2;
 
     while(temp != NULL)
     {
-        cout << temp->playernum << "  "
+        cout << temp->playernum
+             << "  "
              << temp->playername
-             << "  Runs: " << temp->score
-             << "  Wickets: " << temp->wicket
+             << "  Score: "
+             << temp->score
+             << "  Wickets: "
+             << temp->wicket
              << endl;
 
         temp = temp->next;
@@ -159,48 +183,24 @@ void displayTeam2()
 
 void delTeam1()
 {
-    if(hteam1 == NULL)
-        return;
-
-    if(hteam1 == tteam1)
+    while(hteam1 != NULL)
     {
-        free(hteam1);
-        hteam1 = NULL;
-        tteam1 = NULL;
-        return;
+        temp = hteam1;
+        hteam1 = hteam1->next;
+        free(temp);
     }
 
-    temp = hteam1;
-
-    while(temp->next != tteam1)
-        temp = temp->next;
-
-    free(tteam1);
-
-    tteam1 = temp;
-    tteam1->next = NULL;
+    tteam1 = NULL;
 }
 
 void delTeam2()
 {
-    if(hteam2 == NULL)
-        return;
-
-    if(hteam2 == tteam2)
+    while(hteam2 != NULL)
     {
-        free(hteam2);
-        hteam2 = NULL;
-        tteam2 = NULL;
-        return;
+        temp = hteam2;
+        hteam2 = hteam2->next;
+        free(temp);
     }
 
-    temp = hteam2;
-
-    while(temp->next != tteam2)
-        temp = temp->next;
-
-    free(tteam2);
-
-    tteam2 = temp;
-    tteam2->next = NULL;
+    tteam2 = NULL;
 }

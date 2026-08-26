@@ -2,8 +2,9 @@
 #include <string>
 #include <random>
 #include <fstream>
+
+#include "PlayerManagement.cpp"
 #include "score.cpp"
-#include "TeamManagement.cpp"
 
 using namespace std;
 
@@ -17,7 +18,9 @@ int run()
 {
     int outcomes[] = {0, 1, 2, 3, 4, 6, -1};
     double probability[] = {30, 25, 15, 5, 15, 5, 5};
+
     discrete_distribution<> dist(probability, probability + 7);
+
     return outcomes[dist(gen)];
 }
 
@@ -44,6 +47,75 @@ void writeBall(int over, int ball, string batsman, int batsmanID, string bowler,
          << event << "\n";
 
     file.close();
+}
+
+void loadPlayersToMatch(int team1ID, string team1Name, int team2ID, string team2Name)
+{
+    Player *tempPlayer = head;
+
+    while (tempPlayer != NULL)
+    {
+        if (tempPlayer->teamID == team1ID && !tempPlayer->isSubstitute)
+        {
+            addTeam1(
+                tempPlayer->playerName,
+                tempPlayer->playerID,
+                team1Name);
+        }
+
+        if (tempPlayer->teamID == team2ID && !tempPlayer->isSubstitute)
+        {
+            addTeam2(
+                tempPlayer->playerName,
+                tempPlayer->playerID,
+                team2Name);
+        }
+
+        tempPlayer = tempPlayer->next;
+    }
+}
+
+int countPlayers(struct node *head)
+{
+    int count = 0;
+
+    temp = head;
+
+    while (temp != NULL)
+    {
+        count++;
+        temp = temp->next;
+    }
+
+    return count;
+}
+
+struct node *getBowler(struct node *head, int index)
+{
+    temp = head;
+
+    int count = 0;
+
+    while (temp != NULL)
+    {
+        Player *player = getPlayerByID(temp->playernum);
+
+        if (player != NULL)
+        {
+            if (player->role == "Bowler" ||
+                player->role == "All-Rounder")
+            {
+                if (count == index)
+                    return temp;
+
+                count++;
+            }
+        }
+
+        temp = temp->next;
+    }
+
+    return NULL;
 }
 
 class bat
@@ -94,16 +166,16 @@ public:
 
     bowl bw;
 
-    int r1;
-    int r2;
+    int r1 = 0;
+    int r2 = 0;
 
-    batting()
-    {
-        r1 = 0;
-        r2 = 0;
-    }
-
-    int bats(Team *batTeam, Team *bowlTeam, struct node *batHead, struct node *bowlHead, int &currentScore, int start)
+    int bats(
+        struct node *batHead,
+        struct node *bowlHead,
+        string battingTeamName,
+        string bowlingTeamName,
+        int &currentScore,
+        int start)
     {
         int striker = 1;
         int nextBatsman = 3;
@@ -116,8 +188,24 @@ public:
 
         createCSV();
 
-        b1.batset(batTeam->players[0], 1, batTeam->TeamName);
-        b2.batset(batTeam->players[1], 2, batTeam->TeamName);
+        struct node *p1 = getPlayer(batHead, 0);
+        struct node *p2 = getPlayer(batHead, 1);
+
+        if (p1 == NULL || p2 == NULL)
+        {
+            cout << "\nNot enough batsmen.\n";
+            return wickets;
+        }
+
+        b1.batset(
+            p1->playername,
+            p1->playernum,
+            battingTeamName);
+
+        b2.batset(
+            p2->playername,
+            p2->playernum,
+            battingTeamName);
 
         for (int j = 0; j < 20; j++)
         {
@@ -126,27 +214,31 @@ public:
             else
                 target = team1score;
 
-            if (start != 1 && currentScore > target)
+            if (start != 1 && team2score > target)
                 break;
 
-            while (bowlerIndex < 5 && bowlerOvers[bowlerIndex] >= 4)
+            while (bowlerIndex < 5 &&
+                   bowlerOvers[bowlerIndex] >= 4)
+            {
                 bowlerIndex++;
+            }
 
             if (bowlerIndex >= 5)
-            {
                 bowlerIndex = 0;
 
-                while (bowlerIndex < 5 && bowlerOvers[bowlerIndex] >= 4)
-                    bowlerIndex++;
-            }
+            struct node *bowlerNode =
+                getBowler(bowlHead, bowlerIndex);
 
-            if (bowlerIndex >= 5)
+            if (bowlerNode == NULL)
             {
-                cout << "\nNo more bowlers available.\n";
+                cout << "\nNo suitable bowler available.\n";
                 break;
             }
 
-            bw.bowlset(bowlTeam->players[bowlerIndex], bowlerIndex + 1, bowlTeam->TeamName);
+            bw.bowlset(
+                bowlerNode->playername,
+                bowlerNode->playernum,
+                bowlingTeamName);
 
             cout << "\n========== OVER "
                  << j + 1
@@ -157,7 +249,7 @@ public:
                 if (wickets >= 10)
                     break;
 
-                if (start != 1 && currentScore > target)
+                if (start != 1 && team2score > target)
                     break;
 
                 int r = run();
@@ -193,19 +285,28 @@ public:
                     if (r != -1)
                     {
                         b1.score += r;
+
                         currentScore += r;
 
-                        updateScore(batHead, b1.batnum, r);
+                        updateScore(
+                            batHead,
+                            b1.batnum,
+                            r);
 
                         cout << " scored "
                              << r
                              << " runs";
+
+                        cout << "\nCurrent score : "
+                             << b1.score;
                     }
                     else
                     {
                         cout << " is OUT!";
 
-                        updateWicket(bowlHead, bw.bowlnum);
+                        updateWicket(
+                            bowlHead,
+                            bw.bowlnum);
 
                         bw.bowling(r);
 
@@ -218,14 +319,23 @@ public:
 
                         if (nextBatsman <= 11)
                         {
-                            b1.batset(batTeam->players[nextBatsman - 1], nextBatsman, batTeam->TeamName);
+                            struct node *newBatsman =
+                                getPlayer(
+                                    batHead,
+                                    nextBatsman - 1);
 
-                            addBat(b1.batsman, b1.batnum, batTeam->TeamName);
+                            if (newBatsman != NULL)
+                            {
+                                b1.batset(
+                                    newBatsman->playername,
+                                    newBatsman->playernum,
+                                    battingTeamName);
 
-                            nextBatsman++;
+                                nextBatsman++;
 
-                            cout << "\nNew batsman : "
-                                 << b1.batsman;
+                                cout << "\nNew batsman : "
+                                     << b1.batsman;
+                            }
                         }
                     }
                 }
@@ -244,19 +354,28 @@ public:
                     if (r != -1)
                     {
                         b2.score += r;
+
                         currentScore += r;
 
-                        updateScore(batHead, b2.batnum, r);
+                        updateScore(
+                            batHead,
+                            b2.batnum,
+                            r);
 
                         cout << " scored "
                              << r
                              << " runs";
+
+                        cout << "\nCurrent score : "
+                             << b2.score;
                     }
                     else
                     {
                         cout << " is OUT!";
 
-                        updateWicket(bowlHead, bw.bowlnum);
+                        updateWicket(
+                            bowlHead,
+                            bw.bowlnum);
 
                         bw.bowling(r);
 
@@ -269,19 +388,36 @@ public:
 
                         if (nextBatsman <= 11)
                         {
-                            b2.batset(batTeam->players[nextBatsman - 1], nextBatsman, batTeam->TeamName);
+                            struct node *newBatsman =
+                                getPlayer(
+                                    batHead,
+                                    nextBatsman - 1);
 
-                            addBat(b2.batsman, b2.batnum, batTeam->TeamName);
+                            if (newBatsman != NULL)
+                            {
+                                b2.batset(
+                                    newBatsman->playername,
+                                    newBatsman->playernum,
+                                    battingTeamName);
 
-                            nextBatsman++;
+                                nextBatsman++;
 
-                            cout << "\nNew batsman : "
-                                 << b2.batsman;
+                                cout << "\nNew batsman : "
+                                     << b2.batsman;
+                            }
                         }
                     }
                 }
 
-                writeBall(j + 1, i, batsmanName, batsmanID, bw.bowler, bw.bowlnum, r == -1 ? 0 : r, event);
+                writeBall(
+                    j + 1,
+                    i,
+                    batsmanName,
+                    batsmanID,
+                    bw.bowler,
+                    bw.bowlnum,
+                    r == -1 ? 0 : r,
+                    event);
 
                 if (r == 1 || r == 3)
                 {
@@ -322,24 +458,17 @@ public:
 
             if (bowlerIndex >= 5)
                 bowlerIndex = 0;
+
+            if (wickets >= 10)
+                break;
+
+            if (start != 1 && team2score > target)
+                break;
         }
 
         return wickets;
     }
 };
-
-void loadTeamLists(Team *team1, Team *team2)
-{
-    for (int i = 0; i < 11; i++)
-    {
-        addTeam1(team1->players[i], i + 1, team1->TeamName);
-    }
-
-    for (int i = 0; i < 11; i++)
-    {
-        addTeam2(team2->players[i], i + 1, team2->TeamName);
-    }
-}
 
 void displayScoreboard()
 {
@@ -359,9 +488,30 @@ void displayScoreboard()
     displayTeam2();
 }
 
-void startMatch(Team *team1, Team *team2)
+void startMatch(
+    int team1ID,
+    string team1Name,
+    int team2ID,
+    string team2Name)
 {
-    loadTeamLists(team1, team2);
+    delTeam1();
+    delTeam2();
+
+    loadPlayersToMatch(
+        team1ID,
+        team1Name,
+        team2ID,
+        team2Name);
+
+    if (countPlayers(hteam1) < 11 ||
+        countPlayers(hteam2) < 11)
+    {
+        cout << "\nBoth teams must have 11 players.\n";
+        return;
+    }
+
+    team1score = 0;
+    team2score = 0;
 
     int start = 1;
 
@@ -371,14 +521,22 @@ void startMatch(Team *team1, Team *team2)
 
     batting innings1;
 
-    int wickets1 = innings1.bats(team1, team2, hteam1, hteam2, team1score, start);
+    int wickets1 = innings1.bats(
+        hteam1,
+        hteam2,
+        team1Name,
+        team2Name,
+        team1score,
+        start);
 
     cout << "\n\nFIRST INNINGS COMPLETED";
+
     cout << "\n"
-         << team1->TeamName
+         << team1Name
          << " Score : "
          << team1score
-         << "/" << wickets1
+         << "/"
+         << wickets1
          << endl;
 
     start = 2;
@@ -389,14 +547,22 @@ void startMatch(Team *team1, Team *team2)
 
     batting innings2;
 
-    int wickets2 = innings2.bats(team2, team1, hteam2, hteam1, team2score, start);
+    int wickets2 = innings2.bats(
+        hteam2,
+        hteam1,
+        team2Name,
+        team1Name,
+        team2score,
+        start);
 
     cout << "\n\nSECOND INNINGS COMPLETED";
+
     cout << "\n"
-         << team2->TeamName
+         << team2Name
          << " Score : "
          << team2score
-         << "/" << wickets2
+         << "/"
+         << wickets2
          << endl;
 
     cout << "\n========================================\n";
@@ -405,14 +571,14 @@ void startMatch(Team *team1, Team *team2)
 
     if (team2score > team1score)
     {
-        cout << team2->TeamName
+        cout << team2Name
              << " WON BY "
              << 10 - wickets2
              << " WICKETS\n";
     }
     else if (team2score < team1score)
     {
-        cout << team1->TeamName
+        cout << team1Name
              << " WON BY "
              << team1score - team2score
              << " RUNS\n";
@@ -423,4 +589,17 @@ void startMatch(Team *team1, Team *team2)
     }
 
     displayScoreboard();
+}
+
+int main()
+{
+    readCSV();
+
+    startMatch(
+        1,
+        "Team 1",
+        2,
+        "Team 2");
+
+    return 0;
 }
