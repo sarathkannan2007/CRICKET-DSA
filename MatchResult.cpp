@@ -2,14 +2,14 @@
 #include <string>
 using namespace std;
 
+
 class Player
 {
 public:
     string name;
     int runs;
 };
-
-string calculateWinner(string firstTeamName, int difference, string secondTeamName)
+string calculateWinner(string firstTeamName, int difference,string secondTeamName)
 {
     if (difference > 0)
     {
@@ -24,20 +24,21 @@ string calculateWinner(string firstTeamName, int difference, string secondTeamNa
         return "Tie";
     }
 }
-
 int calculateMargin(int difference, int secondTeamWickets)
 {
     if (difference > 0)
     {
         return difference;
     }
-    else if (difference < 0)
+
+   else if (difference < 0)
     {
         return 10 - secondTeamWickets;
     }
 
     return 0;
 }
+
 
 string getResultType(int difference)
 {
@@ -54,7 +55,6 @@ string getResultType(int difference)
         return "Tie";
     }
 }
-
 int findHighestScorer(Player players[], int playerCount)
 {
     int highestIndex = 0;
@@ -69,58 +69,20 @@ int findHighestScorer(Player players[], int playerCount)
 
     return highestIndex;
 }
-
-void displayMatchResult(
-    string firstTeamName,
-    int firstTeamScore,
-    int firstTeamWickets,
-    Player firstTeamPlayers[],
-    int firstTeamPlayerCount,
-    string secondTeamName,
-    int secondTeamScore,
-    int secondTeamWickets,
-    Player secondTeamPlayers[],
-    int secondTeamPlayerCount)
+void displayMatchResult(string firstTeamName,int firstTeamScore,int firstTeamWickets,Player firstTeamPlayers[],int firstTeamPlayerCount,string secondTeamName,int secondTeamScore,int secondTeamWickets,Player secondTeamPlayers[],int secondTeamPlayerCount)
 {
     int difference = firstTeamScore - secondTeamScore;
-
-    string winner = calculateWinner(
-        firstTeamName,
-        difference,
-        secondTeamName
-    );
-
-    int margin = calculateMargin(
-        difference,
-        secondTeamWickets
-    );
-
+    string winner = calculateWinner(firstTeamName,difference,secondTeamName);
+    int margin = calculateMargin(difference,secondTeamWickets);
     string resultType = getResultType(difference);
-
-    int highestIndex1 = findHighestScorer(
-        firstTeamPlayers,
-        firstTeamPlayerCount
-    );
-
-    int highestIndex2 = findHighestScorer(
-        secondTeamPlayers,
-        secondTeamPlayerCount
-    );
-
+    int highestIndex1 = findHighestScorer(firstTeamPlayers,firstTeamPlayerCount);
+    int highestIndex2 = findHighestScorer(secondTeamPlayers,secondTeamPlayerCount);
     cout << "\n====================================";
     cout << "\n           MATCH RESULT";
     cout << "\n====================================";
-
-    cout << "\n\n" << firstTeamName << " : "
-         << firstTeamScore << "/"
-         << firstTeamWickets;
-
-    cout << "\n" << secondTeamName << " : "
-         << secondTeamScore << "/"
-         << secondTeamWickets;
-
+    cout << "\n\n" << firstTeamName<< " : "<< firstTeamScore<< "/"<< firstTeamWickets;
+    cout << "\n" << secondTeamName<< " : "<< secondTeamScore<< "/"<< secondTeamWickets;
     cout << "\n\n------------------------------------";
-
     if (winner == "Tie")
     {
         cout << "\nMATCH TIED!";
@@ -128,57 +90,31 @@ void displayMatchResult(
     else
     {
         cout << "\nWinner: " << winner;
-        cout << "\n" << winner
-             << " won by "
-             << margin
-             << " "
-             << resultType;
+        cout << "\n" << winner<< " won by "<< margin<< " "<< resultType;
     }
-
     cout << "\n\n------------------------------------";
     cout << "\n       HIGHEST SCORER";
 
-    if (firstTeamPlayers[highestIndex1].runs >
-        secondTeamPlayers[highestIndex2].runs)
+    if (firstTeamPlayers[highestIndex1].runs >secondTeamPlayers[highestIndex2].runs)
     {
-        cout << "\nPlayer: "
-             << firstTeamPlayers[highestIndex1].name;
-
-        cout << "\nTeam: "
-             << firstTeamName;
-
-        cout << "\nRuns: "
-             << firstTeamPlayers[highestIndex1].runs;
+        cout << "\nPlayer: "<< firstTeamPlayers[highestIndex1].name;
+        cout << "\nTeam: "<< firstTeamName;
+        cout << "\nRuns: "<< firstTeamPlayers[highestIndex1].runs;
     }
-    else if (secondTeamPlayers[highestIndex2].runs >
-             firstTeamPlayers[highestIndex1].runs)
+
+    else if (secondTeamPlayers[highestIndex2].runs >firstTeamPlayers[highestIndex1].runs)
     {
-        cout << "\nPlayer: "
-             << secondTeamPlayers[highestIndex2].name;
-
-        cout << "\nTeam: "
-             << secondTeamName;
-
-        cout << "\nRuns: "
-             << secondTeamPlayers[highestIndex2].runs;
+        cout << "\nPlayer: "<< secondTeamPlayers[highestIndex2].name;
+        cout << "\nTeam: "<< secondTeamName;
+        cout << "\nRuns: "<< secondTeamPlayers[highestIndex2].runs;
     }
+
     else
     {
         cout << "\nBoth players have the same highest score.";
-
-        cout << "\n"
-             << firstTeamPlayers[highestIndex1].name
-             << " : "
-             << firstTeamPlayers[highestIndex1].runs
-             << " runs";
-
-        cout << "\n"
-             << secondTeamPlayers[highestIndex2].name
-             << " : "
-             << secondTeamPlayers[highestIndex2].runs
-             << " runs";
+        cout << "\n" << firstTeamPlayers[highestIndex1].name<< " : "<< firstTeamPlayers[highestIndex1].runs<< " runs";
+        cout << "\n" << secondTeamPlayers[highestIndex2].name<< " : "<< secondTeamPlayers[highestIndex2].runs<< " runs";
     }
-
     cout << "\n====================================\n";
 }
 
@@ -218,18 +154,7 @@ int main()
 
     int secondTeamPlayerCount = 3;
 
-    displayMatchResult(
-        firstTeamName,
-        firstTeamScore,
-        firstTeamWickets,
-        firstTeamPlayers,
-        firstTeamPlayerCount,
-        secondTeamName,
-        secondTeamScore,
-        secondTeamWickets,
-        secondTeamPlayers,
-        secondTeamPlayerCount
-    );
+    displayMatchResult(firstTeamName,firstTeamScore,firstTeamWickets,firstTeamPlayers,firstTeamPlayerCount,secondTeamName,secondTeamScore,secondTeamWickets,secondTeamPlayers,secondTeamPlayerCount);
 
     return 0;
 }
